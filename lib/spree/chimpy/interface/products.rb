@@ -85,15 +85,21 @@ module Spree::Chimpy
       end
 
       def self.variant_hash(variant)
-        {
+        hash = {
           id: mailchimp_variant_id(variant),
           title: variant.name,
           sku: variant.sku,
           url: product_url_or_default(variant.product),
           price: variant.price.to_f,
-          image_url: variant_image_url(variant),
           inventory_quantity: variant.total_on_hand == Float::INFINITY ? 999 : variant.total_on_hand
         }
+
+        # Mailchimp doesn't not like nil image_url
+        if (image = variant_image_url(variant); image)
+          hash[:image_url] = image
+        end
+
+        hash
       end
 
       def self.variant_image_url(variant)
