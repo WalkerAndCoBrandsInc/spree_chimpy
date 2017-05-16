@@ -74,8 +74,6 @@ module Spree::Chimpy
       #   value - any
       def transform_values(value)
         case value
-        when TrueClass, FalseClass
-          value ? "Yes" : "No"
         when Time, Date, DateTime, ActiveSupport::TimeWithZone
           value.strftime(Config.after_purchase_time_formatting)
         else
