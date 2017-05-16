@@ -64,10 +64,21 @@ module Spree::Chimpy
       def upsert_customer_merge_vars
         merge_vars = {}
         Config.after_purchase_user_merge_vars.map do |key, method_name|
-          merge_vars[key] = @order.user.send(method_name)
+          merge_vars[key] = transform_values(@order.user.send(method_name))
         end
 
         Spree::Chimpy.list.subscribe(@order.email.downcase, merge_vars)
+      end
+
+      # Accepts:
+      #   value - any
+      def transform_values(value)
+        case value
+        when Time, Date, DateTime, ActiveSupport::TimeWithZone
+          value.strftime(Config.after_purchase_time_formatting)
+        else
+          value
+        end
       end
     end
   end
