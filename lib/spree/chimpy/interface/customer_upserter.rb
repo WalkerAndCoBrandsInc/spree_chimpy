@@ -41,6 +41,8 @@ module Spree::Chimpy
       def upsert_customer
         return unless @order.user_id
 
+        upsert_customer_merge_vars
+
         customer_id = self.class.mailchimp_customer_id(@order.user_id)
         begin
           response = store_api_call
@@ -57,6 +59,15 @@ module Spree::Chimpy
             })
         end
         customer_id
+      end
+
+      def upsert_customer_merge_vars
+        merge_vars = {}
+        Config.after_purchase_user_merge_vars.map do |key, method_name|
+          merge_vars[key] = @order.user.send(method_name)
+        end
+
+        Spree::Chimpy.list.subscribe(@order.email.downcase, merge_vars)
       end
     end
   end
