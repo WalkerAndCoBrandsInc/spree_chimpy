@@ -23,7 +23,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
     Spree::Chimpy::Config.subscribe_to_list = true
   end
 
-  describe ".ensure_customers" do
+  describe ".ensure_and_upsert_customers" do
 
     #TODO: Changed from skips sync when mismatch -
     # Updated logic takes the customer attached to the mc_eid regardless of email matching order
@@ -37,7 +37,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
         .with('id-abcd')
         .and_return("customer_999")
 
-      expect(interface.ensure_customer).to eq "customer_999"
+      expect(interface.ensure_and_upsert_customer).to eq "customer_999"
     end
 
     context "when no customer from order source" do
@@ -50,12 +50,12 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
       it "upserts the customer" do
         allow(interface).to receive(:upsert_customer) { "customer_998" }
 
-        expect(interface.ensure_customer).to eq "customer_998"
+        expect(interface.ensure_and_upsert_customer).to eq "customer_998"
       end
 
       it "returns nil if guest checkout" do
         order.user_id = nil
-        expect(interface.ensure_customer).to be_nil
+        expect(interface.ensure_and_upsert_customer).to be_nil
       end
     end
   end
