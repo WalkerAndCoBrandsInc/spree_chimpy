@@ -23,7 +23,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
     Spree::Chimpy::Config.subscribe_to_list = true
   end
 
-  describe ".ensure_customers" do
+  describe ".ensure_and_upsert_customers" do
 
     #TODO: Changed from skips sync when mismatch -
     # Updated logic takes the customer attached to the mc_eid regardless of email matching order
@@ -33,34 +33,34 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
       order.source = Spree::Chimpy::OrderSource.new(email_id: 'id-abcd')
       order.save
 
-      allow(interface).to receive(:customer_id_from_eid)
+      allow(interface).to receive(:upsert_from_eid)
         .with('id-abcd')
         .and_return("customer_999")
 
-      expect(interface.ensure_customer).to eq "customer_999"
+      expect(interface.ensure_and_upsert_customer).to eq "customer_999"
     end
 
     context "when no customer from order source" do
       before(:each) do
-        allow(interface).to receive(:customer_id_from_eid)
+        allow(interface).to receive(:upsert_from_eid)
           .with('id-abcd')
           .and_return(nil)
       end
 
       it "upserts the customer" do
-        allow(interface).to receive(:upsert_customer) { "customer_998" }
+        allow(interface).to receive(:upsert_from_order) { "customer_998" }
 
-        expect(interface.ensure_customer).to eq "customer_998"
+        expect(interface.ensure_and_upsert_customer).to eq "customer_998"
       end
 
       it "returns nil if guest checkout" do
         order.user_id = nil
-        expect(interface.ensure_customer).to be_nil
+        expect(interface.ensure_and_upsert_customer).to be_nil
       end
     end
   end
 
-  describe "#upsert_customer" do
+  describe "#upsert_from_order" do
 
     before(:each) do
       allow(store_api).to receive(:customers)
@@ -75,7 +75,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
         .with(params: { "fields" => "id,email_address"})
         .and_return({ "id" => "customer_#{order.user_id}", "email_address" => order.email})
 
-      customer_id = interface.send(:upsert_customer)
+      customer_id = interface.send(:upsert_from_order)
       expect(customer_id).to eq "customer_#{order.user_id}"
     end
 
@@ -90,7 +90,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
           opt_in_status: true
           })
 
-      customer_id = interface.send(:upsert_customer)
+      customer_id = interface.send(:upsert_from_order)
       expect(customer_id).to eq "customer_#{order.user_id}"
     end
 
@@ -103,11 +103,11 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
       expect(customers_api).to receive(:create) do |h|
         expect(h[:body][:opt_in_status]).to eq false
       end
-      interface.send(:upsert_customer)
+      interface.send(:upsert_from_order)
     end
   end
 
-  describe "#customer_id_from_eid" do
+  describe "#upsert_from_eid" do
     let(:email) { "user@example.com" }
     before(:each) do
       allow(store_api).to receive(:customers) { customers_api }
@@ -121,7 +121,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
         .with(params: { "fields" => "customers.id", "email_address" => email})
         .and_return({ "customers" => [{"id" => "customer_xyz"}] })
 
-      id = interface.customer_id_from_eid("id-abcd")
+      id = interface.upsert_from_eid("id-abcd")
       expect(id).to eq "customer_xyz"
     end
 
@@ -129,7 +129,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
       allow(list).to receive(:email_for_id).with("id-abcd")
         .and_return(nil)
 
-      expect(interface.customer_id_from_eid("id-abcd")).to be_nil
+      expect(interface.upsert_from_eid("id-abcd")).to be_nil
     end
 
     it "is nil if email not found among customers" do
@@ -140,7 +140,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
       expect(customers_api).to receive(:retrieve)
         .and_raise(Gibbon::MailChimpError)
 
-      expect(interface.customer_id_from_eid("id-abcd")).to be_nil
+      expect(interface.upsert_from_eid("id-abcd")).to be_nil
     end
   end
 end

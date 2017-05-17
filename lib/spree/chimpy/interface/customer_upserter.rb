@@ -9,21 +9,28 @@ module Spree::Chimpy
       # CUSTOMER will be pulled first from the MC_EID if present on the order.source
       # IF that is not found, customer will be found by our Customer ID
       # IF that is not found, customer is created with the order email and our Customer ID
-      def ensure_customer
+      def ensure_and_upsert_customer
         # use the one from mail chimp or fall back to the order's email
         # happens when this is a new user
-        customer_id = customer_id_from_eid(@order.source.email_id) if @order.source
-        customer_id || upsert_customer
+        customer_id = upsert_from_eid(@order.source.email_id) if @order.source
+        customer_id || upsert_from_order
       end
 
       def self.mailchimp_customer_id(user_id)
         "customer_#{user_id}"
       end
 
-      def customer_id_from_eid(mc_eid)
+      private
+
+      # Retrieves and upserts the customer from the Mailchimp Email ID
+      #
+      # Parameters:
+      #   mc_eid - String
+      def upsert_from_eid(mc_eid)
         email = Spree::Chimpy.list.email_for_id(mc_eid)
         if email
           begin
+            upsert_customer_merge_vars
             response = store_api_call
               .customers
               .retrieve(params: { "fields" => "customers.id", "email_address" => email })
@@ -36,9 +43,8 @@ module Spree::Chimpy
         end
       end
 
-      private
-
-      def upsert_customer
+      # Retrieves and upserts the customer using the user ID from the order
+      def upsert_from_order
         return unless @order.user_id
 
         upsert_customer_merge_vars
@@ -77,7 +83,7 @@ module Spree::Chimpy
         when Time, Date, DateTime, ActiveSupport::TimeWithZone
           value.strftime(Config.after_purchase_time_formatting)
         else
-          value
+          value.to_s
         end
       end
     end
