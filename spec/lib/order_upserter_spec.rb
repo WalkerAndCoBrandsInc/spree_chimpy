@@ -53,7 +53,7 @@ describe Spree::Chimpy::Interface::OrderUpserter do
         .and_return(order_api)
       allow(Spree::Chimpy::Interface::Products).to receive(:ensure_products)
       allow(Spree::Chimpy::Interface::CustomerUpserter).to receive(:new).with(order) { customer_upserter }
-      allow(customer_upserter).to receive(:ensure_customer) { customer_id }
+      allow(customer_upserter).to receive(:ensure_and_upsert_customer) { customer_id }
     end
 
     it "calls ensure_products" do
@@ -63,7 +63,7 @@ describe Spree::Chimpy::Interface::OrderUpserter do
     end
 
     it "ensures the customer exists and uses that ID" do
-      expect(customer_upserter).to receive(:ensure_customer)
+      expect(customer_upserter).to receive(:ensure_and_upsert_customer)
         .and_return("customer_1")
 
       expect(interface).to receive(:find_and_update_order) do |h|
@@ -74,7 +74,7 @@ describe Spree::Chimpy::Interface::OrderUpserter do
     end
 
     it "does not perform the order upsert if no customer_id exists" do
-      expect(customer_upserter).to receive(:ensure_customer)
+      expect(customer_upserter).to receive(:ensure_and_upsert_customer)
         .and_return(nil)
 
       expect(interface).to_not receive(:perform_upsert)
