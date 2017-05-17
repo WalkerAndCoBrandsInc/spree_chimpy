@@ -77,7 +77,7 @@ module Spree::Chimpy
         when Time, Date, DateTime, ActiveSupport::TimeWithZone
           value.strftime(Config.after_purchase_time_formatting)
         else
-          value
+          value.to_s
         end
       end
     end
