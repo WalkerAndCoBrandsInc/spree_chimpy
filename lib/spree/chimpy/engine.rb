@@ -11,7 +11,7 @@ module Spree::Chimpy
     end
 
     initializer 'spree_chimpy.ensure' do
-      if !Rails.env.test? && Spree::Chimpy.configured?
+      if (Rails.env.staging? || Rails.env.production?) && Spree::Chimpy.configured?
         Spree::Chimpy.ensure_list
         Spree::Chimpy.ensure_segment
       end
