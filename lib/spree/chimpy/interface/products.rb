@@ -36,7 +36,6 @@ module Spree::Chimpy
       private
 
       def upsert_variants
-        all_variants = @product.variants.any? ? @product.variants : [@product.master]
         all_variants.each do |v|
           data = self.class.variant_hash(v)
           data.delete(:id)
@@ -64,7 +63,6 @@ module Spree::Chimpy
         # assign a default taxon if the product is not associated with a category
         taxon = root_taxon if taxon.blank?
 
-        all_variants = @product.variants.any? ? @product.variants : [@product.master]
         data = {
           id: self.class.mailchimp_product_id(@variant),
           title: @product.name,
@@ -119,6 +117,14 @@ module Spree::Chimpy
             :path => "/products/#{product.slug}"}
           ).to_s
         end
+      end
+
+      # Every Spree product has at least one "master" variant; include that as
+      # variant to Mailchimp or it'll error out when trying to add to cart.
+      def all_variants
+        variants = [@product.master]
+        variants.append(*@product.variants) if @product.variants.any?
+        variants
       end
     end
   end
