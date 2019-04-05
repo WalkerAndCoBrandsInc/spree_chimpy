@@ -4,7 +4,8 @@ module Spree::Chimpy
       delegate :log, :store_api_call, to: Spree::Chimpy
 
       def initialize
-        @upserter_class = OrderCartUpserter
+        @upserter_class = CartUpserter
+        @create_method  = :carts
       end
     end
   end

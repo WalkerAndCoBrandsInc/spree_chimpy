@@ -49,6 +49,10 @@ module Spree::Chimpy
     @orders ||= Interface::Orders.new if configured?
   end
 
+  def carts
+    @carts ||= Interface::Carts.new if configured?
+  end
+
   def list_exists?
     list.list_id
   end
@@ -125,12 +129,16 @@ module Spree::Chimpy
     object = payload[:object] || payload[:class].constantize.find(payload[:id])
 
     case event
-    when :order
-      orders.sync(object)
     when :subscribe
       list.subscribe(object.email, merge_vars(object), customer: object.is_a?(Spree.user_class))
     when :unsubscribe
       list.unsubscribe(object.email)
+    when :order_add
+      orders.add(object)
+    when :cart_add
+      carts.add(object)
+    when :cart_delete
+      carts.remove(object)
     end
   end
 end
