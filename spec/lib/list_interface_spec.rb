@@ -114,6 +114,8 @@ describe Spree::Chimpy::Interface::List do
   end
 
   it "segments users" do
+    expect(Spree::Chimpy).to receive(:segment_enabled?).and_return(true)
+
     expect(member_api).to receive(:upsert)
       .with(hash_including(
         body: {
@@ -125,7 +127,7 @@ describe Spree::Chimpy::Interface::List do
       )
 
     expect(segments_api).to receive(:retrieve).with(
-      params: { "fields" => "segments.id,segments.name"}
+      any_args
     ).and_return(segments_response)
 
     expect(segment_api).to receive(:create).with(
@@ -135,10 +137,13 @@ describe Spree::Chimpy::Interface::List do
   end
 
   it "segments" do
-    emails = ["test@test.nl", "test@test.com"]
+    expect(Spree::Chimpy).to receive(:segment_enabled?).and_return(true)
+
     expect(segments_api).to receive(:retrieve).with(
       params: { "fields" => "segments.id,segments.name"}
     ).and_return(segments_response)
+
+    emails = ["test@test.nl", "test@test.com"]
 
     expect(segment_api).to receive(:create).with(
       body: { members_to_add: emails }
@@ -175,9 +180,11 @@ describe Spree::Chimpy::Interface::List do
 
   it "does not segment users when no segment provided" do
     Spree::Chimpy::Config.customer_segment_name = ""
-    allow(lists).to receive(:subscribe)
+    allow(lists_api).to receive(:subscribe)
 
-    expect(lists).to_not receive(:static_segment_members_add)
+    expect(member_api).to receive(:upsert).with({:body=>{:email_address=>"user@example.com", :status=>"subscribed", :merge_fields=>{"SIZE"=>"10"}, :email_type=>"html"}})
+
+    expect(lists_api).to_not receive(:static_segment_members_add)
 
     interface.subscribe("user@example.com", {'SIZE' => '10'}, {customer: true})
   end

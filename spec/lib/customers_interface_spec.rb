@@ -71,6 +71,8 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
     end
 
     it "retrieves based on the customer_id" do
+      allow(list).to receive(:subscribe).with(order.email, {})
+
       expect(customer_api).to receive(:retrieve)
         .with(params: { "fields" => "id,email_address"})
         .and_return({ "id" => "customer_#{order.user_id}", "email_address" => order.email})
@@ -80,6 +82,8 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
     end
 
     it "creates the customer when lookup fails" do
+      allow(list).to receive(:subscribe).with(order.email, {})
+
       allow(customer_api).to receive(:retrieve)
         .and_raise(Gibbon::MailChimpError)
 
@@ -95,6 +99,8 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
     end
 
     it "honors subscribe_to_list settings" do
+      allow(list).to receive(:subscribe).with(order.email, {})
+
       Spree::Chimpy::Config.subscribe_to_list = false
 
       allow(customer_api).to receive(:retrieve)
@@ -114,6 +120,8 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
     end
 
     it "returns based on the mailchimp email address when found" do
+      allow(list).to receive(:subscribe).with(order.email, {})
+
       allow(list).to receive(:email_for_id).with("id-abcd")
         .and_return(email)
 
@@ -121,7 +129,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
         .with(params: { "fields" => "customers.id", "email_address" => email})
         .and_return({ "customers" => [{"id" => "customer_xyz"}] })
 
-      id = interface.upsert_from_eid("id-abcd")
+      id = interface.send(:upsert_from_eid, "id-abcd")
       expect(id).to eq "customer_xyz"
     end
 
@@ -129,10 +137,12 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
       allow(list).to receive(:email_for_id).with("id-abcd")
         .and_return(nil)
 
-      expect(interface.upsert_from_eid("id-abcd")).to be_nil
+      expect(interface.send(:upsert_from_eid, "id-abcd")).to be_nil
     end
 
     it "is nil if email not found among customers" do
+      allow(list).to receive(:subscribe).with(order.email, {})
+
       allow(list).to receive(:email_for_id)
         .with("id-abcd")
         .and_return(email)
@@ -140,7 +150,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
       expect(customers_api).to receive(:retrieve)
         .and_raise(Gibbon::MailChimpError)
 
-      expect(interface.upsert_from_eid("id-abcd")).to be_nil
+      expect(interface.send(:upsert_from_eid, "id-abcd")).to be_nil
     end
   end
 end
