@@ -53,9 +53,11 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
         expect(interface.ensure_and_upsert_customer).to eq "customer_998"
       end
 
-      it "returns nil if guest checkout" do
+      it "upserts guest checkout user" do
         order.user_id = nil
-        expect(interface.ensure_and_upsert_customer).to be_nil
+        allow(interface).to receive(:upsert_from_order) { "customer_998" }
+
+        interface.ensure_and_upsert_customer
       end
     end
   end
@@ -66,7 +68,7 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
       allow(store_api).to receive(:customers)
         .and_return(customers_api)
       allow(store_api).to receive(:customers)
-        .with("customer_#{order.user_id}")
+        .with("customer_#{order.email}")
         .and_return(customer_api)
     end
 
@@ -75,10 +77,10 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
 
       expect(customer_api).to receive(:retrieve)
         .with(params: { "fields" => "id,email_address"})
-        .and_return({ "id" => "customer_#{order.user_id}", "email_address" => order.email})
+        .and_return({ "id" => "customer_#{order.email}", "email_address" => order.email})
 
       customer_id = interface.send(:upsert_from_order)
-      expect(customer_id).to eq "customer_#{order.user_id}"
+      expect(customer_id).to eq "customer_#{order.email}"
     end
 
     it "creates the customer when lookup fails" do
@@ -89,13 +91,13 @@ describe Spree::Chimpy::Interface::CustomerUpserter do
 
       expect(customers_api).to receive(:create)
         .with(:body => {
-          id: "customer_#{order.user_id}",
+          id: "customer_#{order.email}",
           email_address: order.email.downcase,
           opt_in_status: true
           })
 
       customer_id = interface.send(:upsert_from_order)
-      expect(customer_id).to eq "customer_#{order.user_id}"
+      expect(customer_id).to eq "customer_#{order.email}"
     end
 
     it "honors subscribe_to_list settings" do

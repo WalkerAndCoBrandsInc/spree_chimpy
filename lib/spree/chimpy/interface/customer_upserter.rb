@@ -16,8 +16,8 @@ module Spree::Chimpy
         customer_id || upsert_from_order
       end
 
-      def self.mailchimp_customer_id(user_id)
-        "customer_#{user_id}"
+      def self.mailchimp_customer_id(email)
+        "customer_#{email}"
       end
 
       private
@@ -37,7 +37,7 @@ module Spree::Chimpy
 
             data = response["customers"].first
             data["id"] if data
-          rescue Gibbon::MailChimpError => e
+          rescue Gibbon::MailChimpError
             nil
           end
         end
@@ -45,16 +45,16 @@ module Spree::Chimpy
 
       # Retrieves and upserts the customer using the user ID from the order
       def upsert_from_order
-        return unless @order.user_id
+        return unless @order.email
 
         upsert_customer_merge_vars
 
-        customer_id = self.class.mailchimp_customer_id(@order.user_id)
+        customer_id = self.class.mailchimp_customer_id(@order.email)
         begin
           response = store_api_call
             .customers(customer_id)
             .retrieve(params: { "fields" => "id,email_address"})
-        rescue Gibbon::MailChimpError => e
+        rescue Gibbon::MailChimpError
           # Customer Not Found, so create them
           response = store_api_call
             .customers
@@ -68,9 +68,11 @@ module Spree::Chimpy
       end
 
       def upsert_customer_merge_vars
-        merge_vars = {}
-        Config.after_purchase_user_merge_vars.map do |key, method_name|
-          merge_vars[key] = transform_values(@order.user.send(method_name))
+        if @order.user
+          merge_vars = {}
+          Config.after_purchase_user_merge_vars.map do |key, method_name|
+            merge_vars[key] = transform_values(@order.user.send(method_name))
+          end
         end
 
         Spree::Chimpy.list.subscribe(@order.email.downcase, merge_vars)

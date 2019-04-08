@@ -11,7 +11,7 @@ Spree::Order.class_eval do
 
   def notify_mailchimp_order_added
     return unless Spree::Chimpy.configured?
-    return unless state == "cart"
+    return if completed?
 
     Spree::Chimpy.enqueue(:cart_add, self)
   end
