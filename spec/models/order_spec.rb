@@ -20,19 +20,21 @@ describe Spree::Order do
 
     subject { Spree::Chimpy }
 
-    it 'doesnt update when order is not completed' do
-      expect(subject).to_not receive(:enqueue)
+    it 'adds to cart when order is not completed' do
+      expect(subject).to receive(:enqueue).with(:cart_add, @not_completed_order)
       @not_completed_order.update!
     end
 
     it 'updates when order is completed' do
       new_order = create(:completed_order_with_pending_payment, state: 'confirm')
-      expect(subject).to receive(:enqueue).with(:order, new_order)
+      expect(subject).to receive(:enqueue).with(:order_add, new_order)
+      expect(subject).to receive(:enqueue).with(:cart_delete, new_order)
       new_order.next
     end
 
     it 'sync when order is completed' do
-      expect(subject).to receive(:enqueue).with(:order, order)
+      expect(subject).to receive(:enqueue).with(:order_add, order)
+      expect(subject).to receive(:enqueue).with(:cart_delete, order)
       order.cancel!
     end
   end
