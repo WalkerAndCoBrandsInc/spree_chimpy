@@ -48,8 +48,8 @@ describe Spree::Chimpy::Interface::Products do
             handle: product.slug,
           })
           expect(h[:body][:url]).to include("/products/#{product.slug}")
-          expect(h[:body][:variants].count).to eq 1
-          v = h[:body][:variants].first
+          expect(h[:body][:variants].count).to eq 2
+          v = h[:body][:variants].last
           expect(v[:id]).to eq variant.id.to_s
           expect(v[:title]).to eq product.master.name
           expect(v[:sku]).to eq variant.sku
@@ -68,16 +68,16 @@ describe Spree::Chimpy::Interface::Products do
 
       it "updates the variant" do
         variant_api = double('variant_api')
-        allow(product_api).to receive(:variants).with(variant.id).and_return(variant_api)
+        allow(product_api).to receive(:variants).with(any_args).and_return(variant_api)
 
         expect(variant_api).to receive(:upsert) do |h|
           product = variant.product
           expect(h[:body][:url]).to include("/products/#{product.slug}")
           expect(h[:body][:title]).to eq variant.name
-          expect(h[:body][:sku]).to eq variant.sku
+          expect(h[:body][:sku]).to include("SKU-")
           expect(h[:body][:price]).to eq variant.price
           expect(h[:body][:id]).to be_nil
-        end
+        end.twice
 
         interface.ensure_product
       end
