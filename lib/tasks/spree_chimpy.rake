@@ -18,6 +18,7 @@ namespace :spree_chimpy do
         batch.each do |order|
           begin
             Spree::Chimpy.enqueue(:order_add, order)
+            Spree::Chimpy.enqueue(:cart_delete, order)
           rescue => exception
             puts exception
           end
