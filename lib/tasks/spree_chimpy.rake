@@ -14,10 +14,11 @@ namespace :spree_chimpy do
       puts "Exporting #{scope.count} orders"
 
       scope.find_in_batches do |batch|
-        print '.'
+        puts order.number
         batch.each do |order|
           begin
             Spree::Chimpy.enqueue(:order_add, order)
+            Spree::Chimpy.enqueue(:cart_delete, order)
           rescue => exception
             puts exception
           end
@@ -33,7 +34,7 @@ namespace :spree_chimpy do
       puts "Exporting #{scope.count} orders"
 
       scope.find_in_batches do |batch|
-        print '.'
+        puts order.number
         batch.each do |order|
           begin
             Spree::Chimpy.enqueue(:cart_add, order)

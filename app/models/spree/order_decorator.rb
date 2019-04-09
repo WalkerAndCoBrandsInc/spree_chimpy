@@ -5,18 +5,9 @@ Spree::Order.class_eval do
     after_transition :to => :complete, :do => :notify_mailchimp_order_complete
   end
 
-  register_update_hook :notify_mailchimp_order_added
-
   around_save :handle_cancelation
 
   scope :updated_today, -> { where("updated_at >= ?", Time.zone.today) }
-
-  def notify_mailchimp_order_added
-    return unless Spree::Chimpy.configured?
-    return if completed?
-
-    Spree::Chimpy.enqueue(:cart_add, self)
-  end
 
   def notify_mailchimp_order_complete
     return unless Spree::Chimpy.configured?
