@@ -9,6 +9,8 @@ Spree::Order.class_eval do
 
   around_save :handle_cancelation
 
+  scope :updated_today, -> { where("updated_at >= ?", Time.zone.today) }
+
   def notify_mailchimp_order_added
     return unless Spree::Chimpy.configured?
     return if completed?

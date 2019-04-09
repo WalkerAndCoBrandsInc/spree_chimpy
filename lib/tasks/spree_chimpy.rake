@@ -8,8 +8,8 @@ namespace :spree_chimpy do
 
   namespace :orders do
     desc 'sync all orders with mail chimp'
-    task sync: :environment do
-      scope = Spree::Order.complete
+    task complete: :environment do
+      scope = Spree::Order.complete.updated_today
 
       puts "Exporting #{scope.count} orders"
 
@@ -17,13 +17,28 @@ namespace :spree_chimpy do
         print '.'
         batch.each do |order|
           begin
-            order.notify_mail_chimp
+            Spree::Chimpy.enqueue(:order_add, order)
           rescue => exception
-            if defined?(::Delayed::Job)
-              raise exception
-            else
-              puts exception
-            end
+            puts exception
+          end
+        end
+      end
+
+      puts nil, 'done'
+    end
+
+    task incomplete: :environment do
+      scope = Spree::Order.incomplete.updated_today
+
+      puts "Exporting #{scope.count} orders"
+
+      scope.find_in_batches do |batch|
+        print '.'
+        batch.each do |order|
+          begin
+            Spree::Chimpy.enqueue(:cart_add, order)
+          rescue => exception
+            puts exception
           end
         end
       end
