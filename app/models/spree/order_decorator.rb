@@ -7,7 +7,7 @@ Spree::Order.class_eval do
 
   around_save :handle_cancelation
 
-  scope :updated_today, -> { where("updated_at >= ?", Time.zone.today) }
+  scope :updated_since_yesterday, -> { where("updated_at >= ?", Time.zone.yesterday) }
 
   def notify_mailchimp_order_complete
     return unless Spree::Chimpy.configured?

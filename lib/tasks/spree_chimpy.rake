@@ -9,7 +9,7 @@ namespace :spree_chimpy do
   namespace :orders do
     desc 'sync all orders with mail chimp'
     task complete: :environment do
-      scope = Spree::Order.complete.updated_today
+      scope = Spree::Order.complete.updated_since_yesterday
 
       puts "Exporting #{scope.count} orders"
 
@@ -29,7 +29,7 @@ namespace :spree_chimpy do
     end
 
     task incomplete: :environment do
-      scope = Spree::Order.incomplete.updated_today
+      scope = Spree::Order.incomplete.updated_since_yesterday
 
       puts "Exporting #{scope.count} orders"
 
