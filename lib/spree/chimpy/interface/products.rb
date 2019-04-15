@@ -10,11 +10,11 @@ module Spree::Chimpy
       end
 
       def self.mailchimp_variant_id(variant)
-        variant.id.to_s
+        variant.slug.to_s
       end
 
       def self.mailchimp_product_id(variant)
-        variant.product_id.to_s
+        variant.slug.to_s
       end
 
       def self.ensure_products(order)
@@ -52,7 +52,7 @@ module Spree::Chimpy
           .products(@variant.product.id)
           .retrieve(params: { "fields" => "id" })
         !response["id"].nil?
-      rescue Gibbon::MailChimpError => e
+      rescue Gibbon::MailChimpError
         false
       end
 

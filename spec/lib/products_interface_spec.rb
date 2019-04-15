@@ -43,14 +43,14 @@ describe Spree::Chimpy::Interface::Products do
         expect(products_api).to receive(:create) do |h|
           product = variant.product
           expect(h[:body]).to include({
-            id: product.id.to_s,
+            id: product.slug,
             title: product.name,
             handle: product.slug,
           })
           expect(h[:body][:url]).to include("/products/#{product.slug}")
           expect(h[:body][:variants].count).to eq 2
           v = h[:body][:variants].last
-          expect(v[:id]).to eq variant.id.to_s
+          expect(v[:id]).to eq variant.slug.to_s
           expect(v[:title]).to eq product.master.name
           expect(v[:sku]).to eq variant.sku
           expect(v[:price]).to eq product.master.price

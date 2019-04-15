@@ -39,8 +39,8 @@ describe Spree::Chimpy::Interface::OrderUpserter do
       line = body[:lines].first
       item = order.line_items.first
       expect(line[:id]).to eq "line_item_#{item.id}"
-      expect(line[:product_id]).to eq item.variant.product_id.to_s
-      expect(line[:product_variant_id]).to eq item.variant_id.to_s
+      expect(line[:product_id]).to eq item.variant.product.slug.to_s
+      expect(line[:product_variant_id]).to eq item.variant.slug.to_s
       expect(line[:price]).to eq item.variant.price.to_f
       expect(line[:quantity]).to eq item.quantity
     end
