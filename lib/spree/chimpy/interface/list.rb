@@ -24,11 +24,14 @@ module Spree::Chimpy
       def subscribe(email, merge_vars = {}, options = {})
         log "Subscribing #{email} to #{@list_name}"
 
+        s = Spree::Chimpy::Subscriber.find_by(email: email)
+        status = s && !s.subscribed ? "unsubscribed" : "subscribed"
+
         begin
           api_member_call(email)
             .upsert(body: {
               email_address: email,
-              status: "subscribed",
+              status: status,
               merge_fields: merge_vars,
               email_type: 'html'
             }) #, @double_opt_in, true, true, @send_welcome_email)
