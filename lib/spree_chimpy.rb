@@ -100,10 +100,11 @@ module Spree::Chimpy
   end
 
   def ensure_segment
-    if list_exists? && segment_enabled? && !segment_exists?
-      create_segment
-      Rails.logger.error("spree_chimpy: hmm.. a static segment named `#{Config.customer_segment_name}` was not found. Creating it now")
-    end
+    # TODO: disabling it since can't deploy with this
+    #if list_exists? && segment_enabled? && !segment_exists?
+    #  create_segment
+    #  Rails.logger.error("spree_chimpy: hmm.. a static segment named `#{Config.customer_segment_name}` was not found. Creating it now")
+    #end
   end
 
   def handle_event(event, payload = {})
