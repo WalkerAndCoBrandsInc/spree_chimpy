@@ -41,15 +41,15 @@ module Spree::Chimpy
           data.delete(:id)
 
           store_api_call
-            .products(v.product_id)
-            .variants(v.id)
+            .products(self.class.mailchimp_product_id(v.product_id))
+            .variants(self.class.mailchimp_variant_id(v))
             .upsert(body: data)
         end
       end
 
       def product_exists_in_mailchimp?
         response = store_api_call
-          .products(@variant.product.id)
+          .products(self.class.mailchimp_product_id(@variant))
           .retrieve(params: { "fields" => "id" })
         !response["id"].nil?
       rescue Gibbon::MailChimpError
