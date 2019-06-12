@@ -41,7 +41,7 @@ module Spree::Chimpy
           data.delete(:id)
 
           store_api_call
-            .products(self.class.mailchimp_product_id(v.product_id))
+            .products(self.class.mailchimp_product_id(v))
             .variants(self.class.mailchimp_variant_id(v))
             .upsert(body: data)
         end
